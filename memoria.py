@@ -1,9 +1,10 @@
-class Memoria:
+﻿class Memoria:
     def __init__(self):
         self.memoria = []
 
     def guardar(self, instruccion):
         self.memoria.append(instruccion)
+        return len(self.memoria) - 1
 
     def leer(self, direccion):
         return self.memoria[direccion]
@@ -14,7 +15,8 @@ class Memoria:
             self.guardar(instruccion)
 
     def mostrar(self):
-        for i, instrucccion in enumerate(self.memoria):
-            print(i, instrucccion)
+        for i, instruccion in enumerate(self.memoria):
+            print(i, instruccion)
+
     def reiniciar(self):
         self.memoria.clear()

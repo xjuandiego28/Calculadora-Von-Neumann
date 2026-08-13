@@ -1,9 +1,14 @@
-class ALU:
+﻿class UnidadAritmeticoLogica:
+    """Unidad aritmetico-logica para las operaciones de la calculadora."""
+
     def sumar(self, a, b):
-        return a + b 
+        return a + b
+
     def restar(self, a, b):
         return a - b
+
     def multiplicar(self, a, b):
         return a * b
+
     def dividir(self, a, b):
         return a / b
