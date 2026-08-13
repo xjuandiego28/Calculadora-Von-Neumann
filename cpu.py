@@ -26,7 +26,7 @@ class CPU:
         "HALT": "Detención del programa",
     }
 
-    def __init__(self, memoria, benchmark=False, retardo=1):
+    def __init__(self, memoria, benchmark=False, retardo=1.5):
         self.memoria = memoria
         self.contador_programa = 0
         self.registro_instruccion = None
@@ -212,6 +212,11 @@ class CPU:
 
         operacion = self.decodificar()
         resultado = self.ejecutar(operacion)
+        
+        # Actualizar el resultado en memoria
+        if resultado is not None:
+            self.memoria.actualizar_resultado(self.registro_direccion_memoria, resultado)
+        
         if self.on:
             self.avanzar_contador_programa()
         return resultado
@@ -245,6 +250,10 @@ class CPU:
             self.registro_instruccion = instrucciones[0]
             self.informar("El registro de instrucción conserva la primera instrucción del par como referencia de control.")
 
+        # Almacenar direcciones para actualizar resultados después
+        direccion_1 = self.contador_programa
+        direccion_2 = self.contador_programa + 1
+
         def ejecutar_en_modulo(indice):
             modulo = indice + 1
             instruccion = instrucciones[indice]
@@ -265,6 +274,12 @@ class CPU:
             hilo.start()
         for hilo in hilos:
             hilo.join()
+
+        # Actualizar resultados en memoria
+        if resultados[0] is not None:
+            self.memoria.actualizar_resultado(direccion_1, resultados[0])
+        if resultados[1] is not None:
+            self.memoria.actualizar_resultado(direccion_2, resultados[1])
 
         if self.on:
             self.avanzar_contador_programa(2)
