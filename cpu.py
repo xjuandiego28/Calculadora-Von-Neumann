@@ -26,7 +26,7 @@ class CPU:
         "HALT": "Detención del programa",
     }
 
-    def __init__(self, memoria, benchmark=False, retardo=1.5):
+    def __init__(self, memoria, benchmark=False, retardo=1.5, benchmark_retardo=0.0):
         self.memoria = memoria
         self.contador_programa = 0
         self.registro_instruccion = None
@@ -36,7 +36,7 @@ class CPU:
         self.memoria_datos = {}
 
         self.benchmark = benchmark
-        self.retardo = 0 if benchmark else retardo
+        self.retardo = benchmark_retardo if benchmark else retardo
         self.unidad_aritmetico_logica_1 = UnidadAritmeticoLogica()
         self.unidad_aritmetico_logica_2 = UnidadAritmeticoLogica()
         self.unidades_aritmetico_logicas = [
@@ -88,42 +88,25 @@ class CPU:
 
     def buscar_instruccion(self):
         self.informar("\n[BÚSQUEDA DE INSTRUCCIÓN]")
-        self.informar(
-            "El contador de programa contiene la dirección de la siguiente "
-            f"instrucción: {self.contador_programa}."
-        )
+        self.informar("El contador de programa contiene la dirección de la siguiente instrucción: " f"{self.contador_programa}.")
         self.registro_direccion_memoria = self.contador_programa
-        self.informar(
-            "El valor del contador de programa se copia al registro de dirección "
-            f"de memoria: {self.registro_direccion_memoria}."
-        )
+        self.informar("El valor del contador de programa se copia al registro de dirección de memoria: " f"{self.registro_direccion_memoria}.")
 
         if self.registro_direccion_memoria >= len(self.memoria.memoria):
             self.registro_instruccion = None
             self.on = False
-            self.informar(
-                "El registro de dirección de memoria está fuera de rango: "
-                "no hay más instrucciones en memoria."
-            )
+            self.informar("El registro de dirección de memoria está fuera de rango: no hay más instrucciones en memoria.")
             return None
 
         self.registro_datos_memoria = self.memoria.leer(self.registro_direccion_memoria)
-        self.informar(
-            f"La memoria entrega memoria[{self.registro_direccion_memoria}] = "
-            f"{self.formatear_instruccion(self.registro_datos_memoria)}; ese valor queda en "
-            "el registro de datos de memoria."
-        )
+        self.informar(f"La memoria entrega memoria[{self.registro_direccion_memoria}] = {self.formatear_instruccion(self.registro_datos_memoria)}; ese valor queda en el registro de datos de memoria.")
         self.registro_instruccion = self.registro_datos_memoria
-        self.informar(
-            "El contenido del registro de datos de memoria se copia al registro "
-            f"de instrucción: {self.formatear_instruccion(self.registro_instruccion)}."
-        )
+        self.informar("El contenido del registro de datos de memoria se copia al registro de instrucción: " f"{self.formatear_instruccion(self.registro_instruccion)}.")
         return self.registro_instruccion
 
     def decodificar(self):
         if self.registro_instruccion is None:
             return None
-
         operacion = self.registro_instruccion[0]
         descripcion = self.NOMBRES_OPERACIONES.get(operacion, "Operación desconocida")
         self.informar("\n[DECODIFICACIÓN]")
@@ -133,13 +116,7 @@ class CPU:
     def ejecutar(self, operacion=None, modulo=1):
         if self.registro_instruccion is None:
             return None
-
-        return self.ejecutar_modulo(
-            self.registro_instruccion,
-            modulo=modulo,
-            actualizar_acumulador=True,
-            mostrar_pasos=not self.benchmark,
-        )
+        return self.ejecutar_modulo(self.registro_instruccion, modulo=modulo, actualizar_acumulador=True, mostrar_pasos=not self.benchmark)
 
     def ejecutar_modulo(self, instruccion, modulo=1, actualizar_acumulador=False, mostrar_pasos=True):
         self.validar_instruccion(instruccion)
@@ -169,10 +146,7 @@ class CPU:
             direccion = int(a)
             self.memoria_datos[direccion] = self.acumulador
             if mostrar_pasos:
-                self.informar(
-                    "Se copia el acumulador hacia memoria de datos: "
-                    f"memoria_datos[{direccion}] = {self.acumulador:g}."
-                )
+                self.informar("Se copia el acumulador hacia memoria de datos: " f"memoria_datos[{direccion}] = {self.acumulador:g}.")
             return self.acumulador
 
         tabla = self.tablas_operaciones[modulo - 1]
@@ -180,10 +154,7 @@ class CPU:
         simbolo = self.SIMBOLOS[operacion]
 
         if mostrar_pasos:
-            self.informar(
-                "Los operandos salen del registro de instrucción hacia la "
-                f"{nombre_modulo}: A = {a:g}, B = {b:g}."
-            )
+            self.informar("Los operandos salen del registro de instrucción hacia la " f"{nombre_modulo}: A = {a:g}, B = {b:g}.")
             self.informar(f"La {nombre_modulo} reemplaza el operador: {a:g} {simbolo} {b:g}.")
 
         resultado = funcion(a, b)
@@ -201,22 +172,16 @@ class CPU:
     def avanzar_contador_programa(self, cantidad=1):
         anterior = self.contador_programa
         self.contador_programa += cantidad
-        self.informar(
-            "El contador de programa avanza: "
-            f"{anterior} -> {self.contador_programa}."
-        )
+        self.informar("El contador de programa avanza: " f"{anterior} -> {self.contador_programa}.")
 
     def ciclo(self):
         self.buscar_instruccion()
         if not self.on or self.registro_instruccion is None:
             return None
-
         operacion = self.decodificar()
         resultado = self.ejecutar(operacion)
-
         if resultado is not None:
             self.memoria.actualizar_resultado(self.registro_direccion_memoria, resultado)
-
         if self.on:
             self.avanzar_contador_programa()
         return resultado
@@ -226,17 +191,9 @@ class CPU:
         self.buscar_instruccion()
         if not self.on or self.registro_instruccion is None:
             return None
-
-        resultado = self.ejecutar_modulo(
-            self.registro_instruccion,
-            modulo=1,
-            actualizar_acumulador=True,
-            mostrar_pasos=False,
-        )
-
+        resultado = self.ejecutar_modulo(self.registro_instruccion, modulo=1, actualizar_acumulador=True, mostrar_pasos=False)
         if resultado is not None:
             self.memoria.actualizar_resultado(self.registro_direccion_memoria, resultado)
-
         if self.on:
             self.contador_programa += 1
         return resultado
@@ -250,23 +207,13 @@ class CPU:
 
         if mostrar_pasos:
             self.informar("\n[BÚSQUEDA PARALELA DE DOS INSTRUCCIONES]")
-            self.informar(
-                "El contador de programa apunta a la primera instrucción del par: "
-                f"{self.contador_programa}."
-            )
+            self.informar("El contador de programa apunta a la primera instrucción del par: " f"{self.contador_programa}.")
             for desplazamiento, instruccion in enumerate(instrucciones):
                 direccion = self.contador_programa + desplazamiento
                 self.registro_direccion_memoria = direccion
                 self.registro_datos_memoria = instruccion
-                self.informar(
-                    "El registro de dirección de memoria toma el valor "
-                    f"{direccion}; se lee memoria[{direccion}] para el módulo {desplazamiento + 1}."
-                )
-                self.informar(
-                    "El registro de datos de memoria recibe "
-                    f"{self.formatear_instruccion(instruccion)} y lo entrega a la "
-                    f"unidad aritmético-lógica {desplazamiento + 1}."
-                )
+                self.informar("El registro de dirección de memoria toma el valor " f"{direccion}; se lee memoria[{direccion}] para el módulo {desplazamiento + 1}.")
+                self.informar("El registro de datos de memoria recibe " f"{self.formatear_instruccion(instruccion)} y lo entrega a la unidad aritmético-lógica {desplazamiento + 1}.")
             self.registro_instruccion = instrucciones[0]
             self.informar("El registro de instrucción conserva la primera instrucción del par como referencia de control.")
 
@@ -277,16 +224,8 @@ class CPU:
             modulo = indice + 1
             instruccion = instrucciones[indice]
             if mostrar_pasos:
-                self.informar(
-                    f"\n[MÓDULO {modulo}] Inicia procesamiento en paralelo de "
-                    f"{self.formatear_instruccion(instruccion)}."
-                )
-            resultados[indice] = self.ejecutar_modulo(
-                instruccion,
-                modulo=modulo,
-                actualizar_acumulador=(modulo == 1),
-                mostrar_pasos=mostrar_pasos,
-            )
+                self.informar(f"\n[MÓDULO {modulo}] Inicia procesamiento en paralelo de {self.formatear_instruccion(instruccion)}.")
+            resultados[indice] = self.ejecutar_modulo(instruccion, modulo=modulo, actualizar_acumulador=(modulo == 1), mostrar_pasos=mostrar_pasos)
 
         hilos = [threading.Thread(target=ejecutar_en_modulo, args=(i,)) for i in range(2)]
         for hilo in hilos:
@@ -313,8 +252,5 @@ class CPU:
             self.ciclo()
             instrucciones_ejecutadas += 1
 
-        print(
-            "=== PROGRAMA FINALIZADO "
-            f"({instrucciones_ejecutadas} instrucciones ejecutadas; acumulador final = {self.acumulador:g}) ==="
-        )
+        print("=== PROGRAMA FINALIZADO " f"({instrucciones_ejecutadas} instrucciones ejecutadas; acumulador final = {self.acumulador:g}) ===")
         return instrucciones_ejecutadas
