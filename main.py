@@ -111,37 +111,34 @@ def ejecutar_dos_instrucciones(memoria, cpu):
     print(f"  Resultado de la unidad aritmético-lógica 2: {resultado2}")
 
 
-def crear_calculadora(benchmark=False):
+def crear_calculadora(benchmark=False, benchmark_retardo=0.0):
     """Crea una CPU con memoria lista para ejecutar o medir."""
     memoria = Memoria()
-    cpu = CPU(memoria, benchmark=benchmark)
+    cpu = CPU(memoria, benchmark=benchmark, benchmark_retardo=benchmark_retardo)
     return memoria, cpu
 
 
-def ejecutar_secuencia(instrucciones, usar_dos_ual=False, benchmark=False):
+def ejecutar_secuencia(instrucciones, usar_dos_ual=False, benchmark=False, benchmark_retardo=0.0):
     """
-    Ejecuta exactamente la misma secuencia de instrucciones que se usa en la interfaz.
+    Ejecuta exactamente la misma secuencia de dos instrucciones.
 
-    - Con una UAL: las instrucciones se ejecutan secuencialmente, una por ciclo.
-    - Con dos UAL: se ejecutan las dos instrucciones simultáneamente mediante
-      CPU.ejecutar_dos().
-
-    Devuelve los resultados de las instrucciones en el mismo orden.
+    Con una UAL se ejecutan en dos ciclos secuenciales. Con dos UAL se
+    ejecutan simultáneamente mediante CPU.ejecutar_dos().
     """
     if len(instrucciones) != 2:
         raise ValueError("La prueba de rendimiento requiere exactamente dos instrucciones.")
 
-    memoria, cpu = crear_calculadora(benchmark=benchmark)
+    memoria, cpu = crear_calculadora(
+        benchmark=benchmark,
+        benchmark_retardo=benchmark_retardo,
+    )
+    memoria.cargar_programa(instrucciones)
 
     if usar_dos_ual:
-        memoria.cargar_programa(instrucciones)
         return cpu.ejecutar_dos(*instrucciones, mostrar_pasos=False)
 
     resultados = []
-    for instruccion in instrucciones:
-        memoria.cargar_programa([instruccion])
-        cpu.contador_programa = 0
-        cpu.on = True
+    for _ in instrucciones:
         resultados.append(cpu.ciclo_sin_interfaz())
 
     return tuple(resultados)
