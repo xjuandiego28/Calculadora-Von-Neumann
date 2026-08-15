@@ -18,15 +18,6 @@ DESCRIPCIONES_OPERACION = {
     "HALT": "Detener la CPU",
 }
 
-
-def mostrar_encabezado():
-    print("\n" + "=" * 68)
-    print("CALCULADORA VON NEUMANN - VERSIÓN EN CONSOLA")
-    print("=" * 68)
-    print("Este simulador muestra el ciclo: búsqueda -> decodificación -> ejecución.")
-    print("Puede ejecutar una instrucción o dos instrucciones aritméticas en paralelo.")
-
-
 def mostrar_menu_operaciones():
     print("\nOperaciones disponibles:")
     for opcion, codigo in OPCIONES_OPERACION.items():
@@ -123,7 +114,11 @@ def main():
     memoria = Memoria()
     cpu = CPU(memoria)
 
-    mostrar_encabezado()
+    print("\n" + "=" * 68)
+    print("CALCULADORA VON NEUMANN - VERSIÓN EN CONSOLA")
+    print("=" * 68)
+    print("Este simulador muestra el ciclo: búsqueda -> decodificación -> ejecución.")
+    print("Puede ejecutar una instrucción o dos instrucciones aritméticas en paralelo.")
     while cpu.on:
         cantidad = leer_cantidad_operaciones()
         if cantidad == 1:
@@ -136,4 +131,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
