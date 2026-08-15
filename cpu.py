@@ -132,6 +132,9 @@ class CPU:
                 self.informar("La instrucción HALT apaga la CPU. No se ejecutan más instrucciones.")
             return None
 
+        if self.benchmark:
+            self.pausar()
+
         if operacion == "LOAD":
             direccion = int(a)
             valor = self.memoria_datos.get(direccion, 0)
