@@ -1,4 +1,4 @@
-﻿from cpu import CPU
+from cpu import CPU
 from memoria import Memoria
 
 
@@ -17,6 +17,7 @@ DESCRIPCIONES_OPERACION = {
     "DIV": "División",
     "HALT": "Detener la CPU",
 }
+
 
 def mostrar_menu_operaciones():
     print("\nOperaciones disponibles:")
@@ -110,9 +111,44 @@ def ejecutar_dos_instrucciones(memoria, cpu):
     print(f"  Resultado de la unidad aritmético-lógica 2: {resultado2}")
 
 
-def main():
+def crear_calculadora(benchmark=False):
+    """Crea una CPU con memoria lista para ejecutar o medir."""
     memoria = Memoria()
-    cpu = CPU(memoria)
+    cpu = CPU(memoria, benchmark=benchmark)
+    return memoria, cpu
+
+
+def ejecutar_secuencia(instrucciones, usar_dos_ual=False, benchmark=False):
+    """
+    Ejecuta exactamente la misma secuencia de instrucciones que se usa en la interfaz.
+
+    - Con una UAL: las instrucciones se ejecutan secuencialmente, una por ciclo.
+    - Con dos UAL: se ejecutan las dos instrucciones simultáneamente mediante
+      CPU.ejecutar_dos().
+
+    Devuelve los resultados de las instrucciones en el mismo orden.
+    """
+    if len(instrucciones) != 2:
+        raise ValueError("La prueba de rendimiento requiere exactamente dos instrucciones.")
+
+    memoria, cpu = crear_calculadora(benchmark=benchmark)
+
+    if usar_dos_ual:
+        memoria.cargar_programa(instrucciones)
+        return cpu.ejecutar_dos(*instrucciones, mostrar_pasos=False)
+
+    resultados = []
+    for instruccion in instrucciones:
+        memoria.cargar_programa([instruccion])
+        cpu.contador_programa = 0
+        cpu.on = True
+        resultados.append(cpu.ciclo_sin_interfaz())
+
+    return tuple(resultados)
+
+
+def main():
+    memoria, cpu = crear_calculadora()
 
     print("\n" + "=" * 68)
     print("CALCULADORA VON NEUMANN - VERSIÓN EN CONSOLA")
