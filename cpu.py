@@ -1,4 +1,4 @@
-﻿import threading
+import threading
 import time
 
 from alu import UnidadAritmeticoLogica
@@ -62,8 +62,9 @@ class CPU:
             time.sleep(self.retardo)
 
     def informar(self, mensaje):
-        print(mensaje)
-        self.pausar()
+        if not self.benchmark:
+            print(mensaje)
+            self.pausar()
 
     def formatear_instruccion(self, instruccion):
         operacion, a, b = instruccion
@@ -137,7 +138,7 @@ class CPU:
             self.registro_instruccion,
             modulo=modulo,
             actualizar_acumulador=True,
-            mostrar_pasos=True,
+            mostrar_pasos=not self.benchmark,
         )
 
     def ejecutar_modulo(self, instruccion, modulo=1, actualizar_acumulador=False, mostrar_pasos=True):
@@ -212,13 +213,32 @@ class CPU:
 
         operacion = self.decodificar()
         resultado = self.ejecutar(operacion)
-        
-        # Actualizar el resultado en memoria
+
         if resultado is not None:
             self.memoria.actualizar_resultado(self.registro_direccion_memoria, resultado)
-        
+
         if self.on:
             self.avanzar_contador_programa()
+        return resultado
+
+    def ciclo_sin_interfaz(self):
+        """Ejecuta un ciclo sin imprimir pasos, pensado para benchmarks."""
+        self.buscar_instruccion()
+        if not self.on or self.registro_instruccion is None:
+            return None
+
+        resultado = self.ejecutar_modulo(
+            self.registro_instruccion,
+            modulo=1,
+            actualizar_acumulador=True,
+            mostrar_pasos=False,
+        )
+
+        if resultado is not None:
+            self.memoria.actualizar_resultado(self.registro_direccion_memoria, resultado)
+
+        if self.on:
+            self.contador_programa += 1
         return resultado
 
     def ejecutar_dos(self, instruccion1, instruccion2, mostrar_pasos=True):
@@ -250,7 +270,6 @@ class CPU:
             self.registro_instruccion = instrucciones[0]
             self.informar("El registro de instrucción conserva la primera instrucción del par como referencia de control.")
 
-        # Almacenar direcciones para actualizar resultados después
         direccion_1 = self.contador_programa
         direccion_2 = self.contador_programa + 1
 
@@ -275,7 +294,6 @@ class CPU:
         for hilo in hilos:
             hilo.join()
 
-        # Actualizar resultados en memoria
         if resultados[0] is not None:
             self.memoria.actualizar_resultado(direccion_1, resultados[0])
         if resultados[1] is not None:
