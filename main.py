@@ -120,13 +120,20 @@ def crear_calculadora(benchmark=False, benchmark_retardo=0.0):
 
 def ejecutar_secuencia(instrucciones, usar_dos_ual=False, benchmark=False, benchmark_retardo=0.0):
     """
-    Ejecuta exactamente la misma secuencia de dos instrucciones.
+    Ejecuta una secuencia de instrucciones independientes.
 
-    Con una UAL se ejecutan en dos ciclos secuenciales. Con dos UAL se
-    ejecutan simultáneamente mediante CPU.ejecutar_dos().
+    - Con una UAL: todas las instrucciones se ejecutan secuencialmente,
+      una por ciclo.
+    - Con dos UAL: las instrucciones se agrupan de dos en dos y cada par
+      se ejecuta simultáneamente mediante CPU.ejecutar_dos().
+
+    La cantidad de instrucciones debe ser par para poder formar pares
+    completos en el modo de dos UAL.
     """
-    if len(instrucciones) != 2:
-        raise ValueError("La prueba de rendimiento requiere exactamente dos instrucciones.")
+    if not instrucciones:
+        raise ValueError("La secuencia no puede estar vacía.")
+    if len(instrucciones) % 2 != 0:
+        raise ValueError("La cantidad de instrucciones debe ser par para comparar ambas arquitecturas.")
 
     memoria, cpu = crear_calculadora(
         benchmark=benchmark,
@@ -135,7 +142,16 @@ def ejecutar_secuencia(instrucciones, usar_dos_ual=False, benchmark=False, bench
     memoria.cargar_programa(instrucciones)
 
     if usar_dos_ual:
-        return cpu.ejecutar_dos(*instrucciones, mostrar_pasos=False)
+        resultados = []
+        for i in range(0, len(instrucciones), 2):
+            resultados.extend(
+                cpu.ejecutar_dos(
+                    instrucciones[i],
+                    instrucciones[i + 1],
+                    mostrar_pasos=False,
+                )
+            )
+        return tuple(resultados)
 
     resultados = []
     for _ in instrucciones:
